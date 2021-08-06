@@ -1,5 +1,6 @@
 import 'package:agenda_contatos/helpers/contact_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ContactPage extends StatefulWidget {
   final Contact contact;
@@ -13,9 +14,11 @@ class ContactPage extends StatefulWidget {
 class _ContactPageState extends State<ContactPage> {
   Contact _editContact;
 
-  TextEditingController nameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _phoneController = TextEditingController();
+
+  final _nameFocus = FocusNode();
 
   @override
   void initState() {
@@ -25,6 +28,10 @@ class _ContactPageState extends State<ContactPage> {
       _editContact = Contact();
     } else {
       _editContact = Contact.fromMap(widget.contact.toMap());
+
+      _nameController.text = _editContact.name;
+      _emailController.text = _editContact.email;
+      _phoneController.text = _editContact.phone;
     }
   }
 
@@ -49,7 +56,13 @@ class _ContactPageState extends State<ContactPage> {
         backgroundColor: Colors.red,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          if (_editContact.name != null && _editContact.name.isNotEmpty) {
+            Navigator.pop(context, _editContact);
+          } else {
+            FocusScope.of(context).requestFocus(_nameFocus);
+          }
+        },
         child: Icon(Icons.save),
         backgroundColor: Colors.red,
       ),
@@ -73,11 +86,13 @@ class _ContactPageState extends State<ContactPage> {
                       ),
               ),
             ),
-            buildTextField("Nome", nameController, changed: titleChanged),
+            buildTextField("Nome", _nameController, TextInputType.name,
+                changed: titleChanged, focus: _nameFocus),
             Divider(),
-            buildTextField("E-mail", emailController),
+            buildTextField(
+                "E-mail", _emailController, TextInputType.emailAddress),
             Divider(),
-            buildTextField("Telefone", phoneController)
+            buildTextField("Telefone", _phoneController, TextInputType.phone)
           ],
         ),
       ),
@@ -85,13 +100,16 @@ class _ContactPageState extends State<ContactPage> {
   }
 
   Widget buildTextField(String label, TextEditingController textController,
-      {Function changed}) {
+      TextInputType keyboard,
+      {Function changed, FocusNode focus}) {
     return TextField(
       decoration: InputDecoration(
         labelText: label,
       ),
       onChanged: changed,
       controller: textController,
+      keyboardType: keyboard,
+      focusNode: focus,
     );
   }
 }
